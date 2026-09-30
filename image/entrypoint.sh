@@ -33,5 +33,6 @@ sleep 2
 # that's acceptable for a homelab.
 exec logdy follow --full-read \
     --max-message-count "${MAX_MESSAGE_COUNT:-100000}" \
-    --server-ip 0.0.0.0 --server-port 8080 \
+    --ui-ip 0.0.0.0 --port 8080 \
+    --no-updates --no-analytics \
     /var/log/hosts/*.log
