@@ -1,53 +1,45 @@
-# docker-image-template
+# docker-syslog-logdy-server
 
-Template repo for `clbsoldev` Docker images: build → content digest comparison
-→ publish to GHCR (optionally Docker Hub), multi-arch (`linux/amd64,linux/arm64`).
+Minimal syslog receiver (UDP/TCP 514) with [Logdy](https://logdy.dev) as a
+lightweight web UI for browsing/filtering. Writes one log file per sending
+host (`${HOST}` macro in syslog-ng), Logdy tags every line with its origin
+file — filtering by hostname works directly in the UI, no database required.
 
-## Creating a new image from this template
+## Environment variables
 
-1. "Use this template" → create a new repo. Repo name = resulting image name
-   (e.g. repo `syslog-logdy-server` → `ghcr.io/clbsoldev/syslog-logdy-server`).
-   The workflow derives the image name from the repo name automatically —
-   **`.github/workflows/build.yml` does not need to be changed for this.**
-2. Replace the entire `image/` directory with your actual image.
-3. Pin the base image by digest:
-   ```bash
-   docker buildx imagetools inspect <image>:<tag>
-   ```
-   Enter the *top-level* digest (manifest list, not `docker inspect` — that
-   one only reflects the local host's architecture and would break arm64
-   builds) into the Dockerfile.
-4. Replace `Readme.md` and `Changelog.md` with project-specific content.
-5. If Docker Hub should be used: set the repo variable `ENABLE_DOCKERHUB=true`,
-   add `DOCKERHUB_USERNAME`/`DOCKERHUB_TOKEN` as secrets, and add a
-   `short-description` to the `dockerhub-description` step in `build.yml`
-   (that's project-specific text and can't be derived generically).
+| Variable | Default | Description |
+|---|---|---|
+| `RETENTION_HOURS` | `24` | Lines older than N hours are trimmed hourly |
+| `MAX_MESSAGE_COUNT` | `100000` | Logdy buffer size |
+| `MONITORING` | `0` | Set to `1`/`true` to enable the JSON monitoring endpoint |
+| `MONITOR_PORT` | `8081` | Port for the monitoring endpoint, if enabled |
 
-## How `build.yml` behaves
+## Ports
 
-- **Image name**: derived automatically from the repo name, with a leading
-  `docker-` prefix stripped if present (matches the `docker-<name>` repo
-  naming convention, e.g. repo `docker-syslog-logdy-server` → image
-  `ghcr.io/clbsoldev/syslog-logdy-server`). No workflow edit needed per repo.
-- **Publish gate**: the `check` job hashes the built OCI tarball and compares
-  it against `digest.txt` from the last run. Only if the content actually
-  changed does `publish` run — so a weekly cron rebuild with no real change
-  (e.g. base image unchanged) doesn't spam a new `:latest` push.
-- **Docker Hub is off by default.** To enable it on a given repo: set the
-  repo variable `ENABLE_DOCKERHUB=true` (Settings → Secrets and variables →
-  Actions → Variables), and add `DOCKERHUB_USERNAME` / `DOCKERHUB_TOKEN` as
-  secrets. Without the variable, both Docker Hub steps are skipped entirely
-  — GHCR publishing always happens regardless of this toggle.
+| Port | Protocol | Purpose |
+|---|---|---|
+| 514 | UDP/TCP | Syslog input |
+| 8080 | TCP | Logdy web UI |
+| 8081 | TCP | Monitoring endpoint (only if `MONITORING=1`) |
 
-## Labels
+## Monitoring endpoint
 
-`.github/labels.yml` is automatically synced to the repo on every push that
-changes this file (`label-sync.yml`, via `micnncim/action-label-syncer`). Just
-add/change labels there and push.
+When enabled, `GET /` or `GET /index.json` on `MONITOR_PORT` returns:
 
-## Known limitation of "Use this template"
+```json
+{
+  "hostname": "hau-syslog01",
+  "uptime_seconds": 1234,
+  "retention_hours": 24,
+  "services": { "syslog-ng": true, "cron": true, "logdy": true },
+  "hosts": { "host_count": 3, "total_bytes": 48213, "newest_message_age_seconds": 12 }
+}
+```
 
-GitHub does **not** copy repository labels when using "Use this template" —
-only files. That's what the separate `label-sync.yml` workflow is for: it
-runs automatically on the first push to `main` in the new repo and creates
-the labels from `labels.yml`, with no manual step required.
+## Known limitations
+
+- Newly seen hosts only appear in the web UI after a container restart
+  (Logdy reads the file list once at startup).
+- Empty files (host hasn't sent anything in 24h+) are kept, not deleted —
+  intentional, so the container doesn't need to restart for every inactive
+  host.
