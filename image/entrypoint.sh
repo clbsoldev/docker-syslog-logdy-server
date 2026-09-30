@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# Bash excludes dotfiles from glob expansion by default - without this,
+# /var/log/hosts/*.log below wouldn't match .placeholder.log and would be
+# passed to logdy as a literal, unexpanded string
+shopt -s dotglob
+
 mkdir -p /var/log/hosts
 # Placeholder so the *.log glob below doesn't get passed as a literal string
 # to logdy on the very first start (no host file exists yet)
