@@ -1,3 +1,8 @@
+# Get the digest via `docker buildx imagetools inspect debian:trixie-slim`
+# (the FIRST digest shown there - that's the manifest-list digest covering
+# all arches, NOT the one from `docker inspect` on a locally pulled image,
+# which would only be valid for the build host's architecture and would
+# break arm64 builds)
 FROM debian:trixie-slim
 
 ARG TARGETARCH
@@ -14,6 +19,7 @@ RUN apt-get update \
 COPY syslog-ng.conf /etc/syslog-ng/syslog-ng.conf
 COPY trim-old.sh /usr/local/bin/trim-old.sh
 COPY monitor.py /usr/local/bin/monitor.py
+COPY logdy-columns.json /etc/logdy/config.json
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /usr/local/bin/trim-old.sh /usr/local/bin/monitor.py /entrypoint.sh
 

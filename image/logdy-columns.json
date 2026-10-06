@@ -1,0 +1,51 @@
+{
+	"name": "main",
+	"columns": [
+		{
+			"id": "147428",
+			"name": "Time",
+			"handlerTsCode": "(line: Message): CellHandler => {\n  const m = line.content.match(/^(\\S+)/);\n  return { text: m ? m[1] : \"-\" };\n}",
+			"faceted": false,
+			"idx": 2,
+			"width": 150
+		},
+		{
+			"id": "816935",
+			"name": "Host",
+			"handlerTsCode": "(line: Message): CellHandler => {\n  const m = line.content.match(/^\\S+\\s+(\\S+)/);\n  return { text: m ? m[1] : \"-\" };\n}",
+			"faceted": false,
+			"idx": 1,
+			"width": 150
+		},
+		{
+			"id": "210372",
+			"name": "MsgHDR",
+			"handlerTsCode": "(line: Message): CellHandler => {\n  const m = line.content.match(/^\\S+\\s+\\S+\\s+([^\\s:]+):\\s*/);\n  return { text: m ? m[1] : \"\" };\n}",
+			"faceted": false,
+			"idx": 3,
+			"width": 216
+		},
+		{
+			"id": "750787",
+			"name": "Message",
+			"handlerTsCode": "(line: Message): CellHandler => {\n  const m = line.content.match(/^\\S+\\s+\\S+\\s+(?:[^\\s:]+:\\s*)?(.*)$/);\n  return { text: m ? m[1] : line.content };\n}",
+			"faceted": false,
+			"idx": 4,
+			"width": 261
+		},
+		{
+			"id": "561484",
+			"name": "raw",
+			"handlerTsCode": "(line: Message): CellHandler => {\n          return { text: line.content || \"-\"}\n      }",
+			"idx": 0,
+			"width": 150
+		}
+	],
+	"settings": {
+		"leftColWidth": 300,
+		"drawerColWidth": 900,
+		"maxMessages": 1000,
+		"middlewares": [],
+		"entriesOrder": "desc"
+	}
+}
