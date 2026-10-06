@@ -118,7 +118,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           repository: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ steps.meta.outputs.image_name }}
-          readme-filepath: ./Readme.md
+          readme-filepath: ./README.md
 
       - name: Commit updated digest
         run: |
