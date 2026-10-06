@@ -113,6 +113,12 @@ jobs:
 
       - name: Sync README to Docker Hub
         if: vars.ENABLE_DOCKERHUB == 'true'
+        # Docker Hub's description-update API does not accept access tokens
+        # (confirmed Docker Hub limitation, not a scope issue) - only real
+        # account passwords work, which we don't want to store as a secret.
+        # continue-on-error so this cosmetic step never fails the actual
+        # image push, which is what matters.
+        continue-on-error: true
         uses: peter-evans/dockerhub-description@v5
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
