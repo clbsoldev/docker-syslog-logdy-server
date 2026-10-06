@@ -8,7 +8,7 @@ on:
     paths:
       - "image/**"
   schedule:
-    - cron: "0 22 * * 0"
+    - cron: "0 21 * * 0"
   workflow_dispatch: {}
 
 jobs:
@@ -109,7 +109,7 @@ jobs:
             --multi-arch all \
             --dest-creds "${{ secrets.DOCKERHUB_USERNAME }}:${{ secrets.DOCKERHUB_TOKEN }}" \
             oci-archive:image.tar \
-            docker://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.meta.outputs.image_name }}:latest
+            docker://docker.io/${{ vars.DOCKERHUB_NAMESPACE }}/${{ steps.meta.outputs.image_name }}:latest
 
       - name: Sync README to Docker Hub
         if: vars.ENABLE_DOCKERHUB == 'true'
@@ -117,7 +117,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-          repository: ${{ secrets.DOCKERHUB_USERNAME }}/${{ steps.meta.outputs.image_name }}
+          repository: ${{ vars.DOCKERHUB_NAMESPACE }}/${{ steps.meta.outputs.image_name }}
           readme-filepath: ./Readme.md
 
       - name: Commit updated digest
